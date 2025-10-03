@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libro de Contenidos Digital</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 40px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1, h2 { color: #0056b3; }
+        form { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #fafafa; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; }
+        .full-width { grid-column: 1 / -1; }
+        label { font-weight: bold; margin-bottom: 5px; }
+        input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        textarea, select[multiple] { resize: vertical; min-height: 120px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 1rem; }
+        .btn-primary { background-color: #007bff; }
+        .btn-danger { background-color: #dc3545; font-size: 0.8rem; padding: 5px 10px; }
+        .registros-tabla { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .registros-tabla th, .registros-tabla td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: top; }
+        .registros-tabla th { background-color: #007bff; color: white; }
+        .registros-tabla tr:nth-child(even) { background-color: #f2f2f2; }
+        .registros-tabla ul { margin: 0; padding-left: 20px; }
+        .flash { padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .form-instruction { font-size: 0.85em; color: #6c757d; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Libro de Contenidos Algoritmo y Programación</h1>
+
+    <!-- Sección para mostrar mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <h2>Añadir Nuevo Registro</h2>
+    <form action="{{ url_for('index') }}" method="post">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="dia">Día</label>
+                <input type="number" id="dia" name="dia" value="{{ datos_iniciales.dia }}" required>
+                <small class="form-instruction">Día del mes (ej: 05).</small>
+            </div>
+            <div class="form-group">
+                <label for="mes">Mes</label>
+                <input type="number" id="mes" name="mes" value="{{ datos_iniciales.mes }}" required>
+                <small class="form-instruction">Mes del año (ej: 03 para marzo).</small>
+            </div>
+            <div class="form-group">
+                <label for="clase_nro">Clase Nro.</label>
+                <input type="number" id="clase_nro" name="clase_nro" value="{{ datos_iniciales.clase_nro }}" required>
+                <small class="form-instruction">Número correlativo de la clase.</small>
+            </div>
+            <div class="form-group">
+                <label for="unidad_nro">Unidad Nro.</label>
+                <input type="number" id="unidad_nro" name="unidad_nro" required>
+                <small class="form-instruction">Unidad temática que se aborda.</small>
+            </div>
+            <div class="form-group">
+                <label for="caracter_clase">Carácter de la Clase</label>
+                <select id="caracter_clase" name="caracter_clase">
+                    <option value="Normal">Normal</option>
+                    <option value="Introductoria">Introductoria</option>
+                    <option value="Repaso">Repaso</option>
+                    <option value="Evaluación">Evaluación</option>
+                    <option value="Consulta">Consulta</option>
+                </select>
+                <small class="form-instruction">Seleccione el tipo de clase.</small>
+            </div>
+            <div class="form-group full-width">
+                <label for="contenidos">Contenidos</label>
+                <select id="contenidos" name="contenidos" multiple required>
+                    {% for modulo, lista_contenidos in contenidos_materia.items() %}
+                        <optgroup label="{{ modulo }}">
+                            {% for contenido in lista_contenidos %}
+                                <option value="{{ contenido }}">{{ contenido }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                </select>
+                <small class="form-instruction">Use Ctrl+Click (o Cmd+Click) para seleccionar varios.</small>
+            </div>
+            <div class="form-group full-width">
+                <label for="actividades">Actividades</label>
+                <textarea id="actividades" name="actividades"></textarea>
+                <small class="form-instruction">Describa brevemente las actividades realizadas.</small>
+            </div>
+            <div class="form-group full-width">
+                <label for="observaciones">Observaciones</label>
+                <textarea id="observaciones" name="observaciones"></textarea>
+                <small class="form-instruction">Comentarios relevantes (ausencias, eventos, etc.).</small>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Guardar Registro</button>
+    </form>
+
+    <h2>Registros Anteriores</h2>
+    <div style="overflow-x:auto;">
+        <table class="registros-tabla">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Clase</th>
+                    <th>Unidad</th>
+                    <th>Carácter</th>
+                    <th>Contenidos</th>
+                    <th>Actividades</th>
+                    <th>Observaciones</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registro in registros %}
+                <tr>
+                    <td>{{ registro.dia }}/{{ registro.mes }}</td>
+                    <td>{{ registro.clase_nro }}</td>
+                    <td>{{ registro.unidad_nro }}</td>
+                    <td>{{ registro.caracter_clase }}</td>
+                    <td>
+                        <ul>
+                        {% for item in registro.contenidos.split(' | ') %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                    <td>{{ registro.actividades }}</td>
+                    <td>{{ registro.observaciones }}</td>
+                    <td>
+                        <form action="{{ url_for('eliminar', registro_id=registro.id) }}" method="post" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este registro?');">
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" style="text-align: center;">No hay registros todavía.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>
